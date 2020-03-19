@@ -4,30 +4,66 @@ from .models import Usuario
 from .serializers import UsuarioSerializer
 from  django.shortcuts import  get_object_or_404
 
-class UsuarioView(APIView):
-    def get(self, request):
-        usuarios = Usuario.objects.all()
-        serializer = UsuarioSerializer(usuarios, many=True)
-        return Response({"usuarios": serializer.data})
+from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import ListModelMixin
+from rest_framework.mixins import CreateModelMixin
+from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 
-    def post(self, request):
-        usuario = request.data.get('usuario')
-        print(usuario)
-        serializer = UsuarioSerializer(data=usuario)
-        if serializer.is_valid(raise_exception=True):
-            usuario_salvo = serializer.save()
-        return Response({"success": "Usuario '{}' criado corretamente".format(usuario_salvo.nome)})
 
-    def put(self, request, pk):
-        usuario_salvo = get_object_or_404(Usuario.objects.all(), pk=pk)
-        data = request.data
-        serializer = UsuarioSerializer(instance=usuario_salvo, data=data, partial=True)
+class UsuarioView(ListModelMixin, GenericAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
 
-        if serializer.is_valid(raise_exception=True):
-            usuario_salvo = serializer.save()
-        return Response({"success": "Usuario '{}' atualizado corretamente".format(usuario_salvo.nome)})
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, *kwargs)
 
-    def delete(self, request, pk):
-        usuario = get_object_or_404(Usuario.objects.all(), pk=pk)
-        usuario.delete()
-        return Response({"message": "Usuário com o id `{}` deletado.".format(pk)},status=204)
+class UsuarioView(CreateAPIView, ListAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+
+    def perform_create(self, serializer):
+        if serializer.is_valid():
+            serializer.save()
+
+
+
+class UsuarioView(ListModelMixin, CreateModelMixin, GenericAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+
+    def perform_create(self, serializer):
+        if serializer.is_valid():
+            serializer.save()
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, *kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+
+
+class UsuarioView(CreateAPIView, ListCreateAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+
+    def perform_create(self, serializer):
+        if serializer.is_valid():
+            serializer.save()
+
+class UsuarioView(ListCreateAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+
+    def perform_create(self, serializer):
+        if serializer.is_valid():
+            serializer.save()
+
+class SingleUsuarioView(RetrieveAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+
+class SingleUsuarioView(RetrieveUpdateAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
